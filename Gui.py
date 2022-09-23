@@ -1,5 +1,4 @@
 from collections import deque
-from multiprocessing import Barrier
 import os, time
 import PySimpleGUI as sg                       
 import tkinter as tk  
