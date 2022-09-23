@@ -16,8 +16,23 @@ global currentTime
 
 
 ########################################################################################
+##############################   Resuable Functionality  ###############################
+########################################################################################
+
+def currentTimeToMinSeconds():
+    global currentTime
+    minutes = currentTime / 60
+    seconds = currentTime - (minutes * 60)
+    
+    formattedTime = minutes + ":" + seconds
+    
+    return formattedTime
+
+
+########################################################################################
 ##############################   Alarm Functionality  ##################################
 ########################################################################################
+
 
 def playAlarmSound():
     frequency = 500  # Set Frequency To 2500 Hertz
@@ -27,18 +42,32 @@ def playAlarmSound():
 
 def alarmArg(codeArray):
     print("Alarm Arg Detected")
-    alarmTimeOffset = int(codeArray[1])
+    
+    try:
+        alarmTimeOffset = int(codeArray[1])
+    except:
+        print("No Time Argument Set: Defaulting to 25 seconds.")
+        alarmTimeOffset = 25
+
     def run():
         global currentTime
-        goaltime = currentTime + alarmTimeOffset
-        while (switch == True):
-            time.sleep(1)
-            if goaltime <= currentTime:
-                playAlarmSound()
+        
+        try:
+            goaltime = currentTime + alarmTimeOffset
             
-            if switch == False:
-                currentTime = 0
-                break
+            while (switch == True):
+                time.sleep(1)
+                if goaltime <= currentTime:
+                    playAlarmSound()
+                    break
+                
+                if switch == False:
+                    break
+        except:
+            print("Game Timers not Set, Alarm Not Set")
+            
+            
+
 
     thread = threading.Thread(target=run)
     thread.start()
@@ -78,9 +107,47 @@ def gameTimerArg(codeArray):
 ########################################################################################
 #######################   Spell Cooldown Tracker Functionality  ########################
 ########################################################################################
-  
-def spellCooldownArg():
+
+class Spell:
+    def __init__(self, name, cooldown):
+        self.name = name
+        self.cooldown = cooldown
+
+class SpellAndOwner:
+    def __init__(self, spell, owner):
+        self.spell = spell
+        self.owner = owner
+    
+Flash = Spell("Flash", 600)
+
+def spellCooldownArg(codeArray):
     print("Spell Arg Detected")
+    
+    
+    
+    
+    try:
+        alarmTimeOffset = int(codeArray[1])
+    except:
+        print("No Time Argument Set: Defaulting to 25 seconds.")
+        alarmTimeOffset = 25
+
+    def run():
+        global currentTime
+        
+        try:
+            goaltime = currentTime + alarmTimeOffset
+            
+            while (switch == True):
+                time.sleep(1)
+                if goaltime <= currentTime:
+                    playAlarmSound()
+                    break
+                
+                if switch == False:
+                    break
+        except:
+            print("Game Timers not Set, Alarm Not Set")
     
     
 ########################################################################################
