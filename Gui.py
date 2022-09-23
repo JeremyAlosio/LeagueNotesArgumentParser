@@ -5,23 +5,19 @@ import tkinter as tk
 import threading
 import winsound
 
-#Globals
+########################################################################################
+###########################   Global Values Functionality  #############################
+########################################################################################
+
 nf = "C:\Riot Games\League of Legends\MyNotes.txt" #Set Notes File Location
 switch = True
 root = tk.Tk()
 global currentTime
 
-#Functions
-def tail(filename):
-    with open(filename) as f:
-        return deque(f, 1) 
 
-
-def playAlarmSound():
-    frequency = 500  # Set Frequency To 2500 Hertz
-    duration = 500  # Set Duration To 1000 ms == 1 second
-    winsound.Beep(frequency, duration)
-    winsound.Beep(frequency, duration)
+########################################################################################
+##############################   Alarm Functionality  ##################################
+########################################################################################
 
 def gameTimerTracker(offset):
     def run():
@@ -38,7 +34,6 @@ def gameTimerTracker(offset):
     thread = threading.Thread(target=run)
     thread.start()
 
-
 def gameTimerArg(codeArray):
     print("Game Time Arg Detected")
     match len(codeArray):
@@ -46,15 +41,51 @@ def gameTimerArg(codeArray):
             gameTimerTracker(0)
         case 2:
             gameTimerTracker(int(codeArray[1]))
-    
-    
-def AlarmArg():
-    
-    
+
+########################################################################################
+###########################   Game Timer Functionality  ################################
+########################################################################################
+
+def playAlarmSound():
+    frequency = 500  # Set Frequency To 2500 Hertz
+    duration = 500  # Set Duration To 1000 ms == 1 second
+    winsound.Beep(frequency, duration)
+    winsound.Beep(frequency, duration)
+
+def alarmArg(codeArray):
+    alarmTimeOffset = int(codeArray[1])
+    def run():
+        global currentTime
+        goaltime = currentTime + alarmTimeOffset
+        while (switch == True):
+            time.sleep(1)
+            if goaltime <= currentTime:
+                playAlarmSound()
+            
+            if switch == False:
+                currentTime = 0
+                break
+
+    thread = threading.Thread(target=run)
+    thread.start()
+
+
+########################################################################################
+#######################   Spell Cooldown Tracker Functionality  ########################
+########################################################################################
+  
 def SpellCooldownArg():
+    print("Spell Arg Detected")
     
     
-    
+########################################################################################
+###############################   MyNotes.txt Parser  ##################################
+########################################################################################
+
+def tail(filename):
+    with open(filename) as f:
+        return deque(f, 1) 
+
 
 
 def parseCode(code):
@@ -65,7 +96,7 @@ def parseCode(code):
             gameTimerArg(codeArray)
         case "a":
             print("Alarm Arg Detected")
-            playAlarmSound()
+            alarmArg(codeArray)
 
         case "s":
             print("Spell Arg Detected")
@@ -74,8 +105,9 @@ def parseCode(code):
 
 
 
-
-#Main
+########################################################################################
+################################  Main  Loop ###########################################
+########################################################################################
 def pole():
     def run():
         moddate = os.stat(nf)[8]
@@ -91,6 +123,12 @@ def pole():
 
     thread = threading.Thread(target=run)
     thread.start()
+
+
+
+########################################################################################
+#############################  GUI Functionality  Loop #################################
+########################################################################################
 
 def switchon():  
     global switch
