@@ -19,6 +19,37 @@ global currentTime
 ##############################   Alarm Functionality  ##################################
 ########################################################################################
 
+def playAlarmSound():
+    frequency = 500  # Set Frequency To 2500 Hertz
+    duration = 500  # Set Duration To 1000 ms == 1 second
+    winsound.Beep(frequency, duration)
+    winsound.Beep(frequency, duration)
+
+def alarmArg(codeArray):
+    print("Alarm Arg Detected")
+    alarmTimeOffset = int(codeArray[1])
+    def run():
+        global currentTime
+        goaltime = currentTime + alarmTimeOffset
+        while (switch == True):
+            time.sleep(1)
+            if goaltime <= currentTime:
+                playAlarmSound()
+            
+            if switch == False:
+                currentTime = 0
+                break
+
+    thread = threading.Thread(target=run)
+    thread.start()
+                       
+
+########################################################################################
+###########################   Game Timer Functionality  ################################
+########################################################################################
+
+
+
 def gameTimerTracker(offset):
     def run():
         global currentTime
@@ -41,40 +72,14 @@ def gameTimerArg(codeArray):
             gameTimerTracker(0)
         case 2:
             gameTimerTracker(int(codeArray[1]))
-
-########################################################################################
-###########################   Game Timer Functionality  ################################
-########################################################################################
-
-def playAlarmSound():
-    frequency = 500  # Set Frequency To 2500 Hertz
-    duration = 500  # Set Duration To 1000 ms == 1 second
-    winsound.Beep(frequency, duration)
-    winsound.Beep(frequency, duration)
-
-def alarmArg(codeArray):
-    alarmTimeOffset = int(codeArray[1])
-    def run():
-        global currentTime
-        goaltime = currentTime + alarmTimeOffset
-        while (switch == True):
-            time.sleep(1)
-            if goaltime <= currentTime:
-                playAlarmSound()
             
-            if switch == False:
-                currentTime = 0
-                break
-
-    thread = threading.Thread(target=run)
-    thread.start()
 
 
 ########################################################################################
 #######################   Spell Cooldown Tracker Functionality  ########################
 ########################################################################################
   
-def SpellCooldownArg():
+def spellCooldownArg():
     print("Spell Arg Detected")
     
     
@@ -95,11 +100,9 @@ def parseCode(code):
         case "gt":
             gameTimerArg(codeArray)
         case "a":
-            print("Alarm Arg Detected")
             alarmArg(codeArray)
-
         case "s":
-            print("Spell Arg Detected")
+            spellCooldownArg()
         
 
 
