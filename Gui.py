@@ -1,5 +1,4 @@
 from collections import deque
-from glob import glob
 from multiprocessing import Barrier
 import os, time
 import PySimpleGUI as sg                       
