@@ -117,14 +117,15 @@ class SpellAndOwner:
     def __init__(self, spell, owner):
         self.spell = spell
         self.owner = owner
-    
-Flash = Spell("Flash", 600)
+
+########### Spell Definitions ##########    
+
+Flash = Spell("Flash", 300)
+
+########################################    
 
 def spellCooldownArg(codeArray):
     print("Spell Arg Detected")
-    
-    
-    
     
     try:
         alarmTimeOffset = int(codeArray[1])
