@@ -1,4 +1,6 @@
 from collections import deque
+from glob import glob
+from multiprocessing import Barrier
 import os, time
 import PySimpleGUI as sg                       
 import tkinter as tk  
@@ -13,20 +15,28 @@ nf = "C:\Riot Games\League of Legends\MyNotes.txt" #Set Notes File Location
 switch = True
 root = tk.Tk()
 global currentTime
+global spellCooldownList
 
 
 ########################################################################################
 ##############################   Resuable Functionality  ###############################
 ########################################################################################
 
-def currentTimeToMinSeconds():
-    global currentTime
-    minutes = currentTime / 60
-    seconds = currentTime - (minutes * 60)
+def secondsToMinSeconds(time):
+    minutes = int(time / 60)
+    seconds = time - (minutes * 60)
     
-    formattedTime = minutes + ":" + seconds
+    formattedTime = str(minutes) + ":" + str(seconds)
     
     return formattedTime
+
+
+def timeStringToSeconds(timeString):
+    timeArray = timeString.split(",")
+    minutes = timeArray[0]
+    seconds = timeArray[1]
+    return (minutes * 60) + seconds
+    
 
 
 ########################################################################################
@@ -108,48 +118,111 @@ def gameTimerArg(codeArray):
 #######################   Spell Cooldown Tracker Functionality  ########################
 ########################################################################################
 
-class Spell:
+class SpellType:
     def __init__(self, name, cooldown):
         self.name = name
         self.cooldown = cooldown
 
-class SpellAndOwner:
-    def __init__(self, spell, owner):
+class Spell:
+    def __init__(self, spell, owner, gameTimeExperation):
         self.spell = spell
         self.owner = owner
+        self.gameTimeExperation = gameTimeExperation
+        
+    def __str__(self) -> str:
+        if self.owner != "":
+            return self.owner + " " + self.spell + ": " + self.gameTimeExperation
+        else:
+            return self.spell.name + ": " + secondsToMinSeconds(self.gameTimeExperation)
 
 ########### Spell Definitions ##########    
 
-Flash = Spell("Flash", 300)
+Flash = SpellType("Flash", 300)
+Heal = SpellType("Heal", 240)
+Ghost = SpellType("Ghost", 210)
+Teleport = SpellType("Teleport", 360)
+Cleanse = SpellType("Cleanse", 210)
+Exhaust = SpellType("Exhaust", 210)
+Barrier = SpellType("Barrier", 180)
+Ignite = SpellType("Ignite", 180)
 
 ########################################    
+  
+
+
+def parseSpellArgs(argSet, Spell):
+    global currentTime
+    
+    try:
+        argument = argSet[0]
+        
+        match argument:
+            case "o" | "owner":
+                Spell.owner = argSet[1]                   
+            case "f" | "offset":
+                Spell.gameTimeExperation = int(argSet[1]) + currentTime
+            case "t" | "time":
+                Spell.gameTimeExperation = timeStringToSeconds(argSet[1]) + currentTime
+                
+    except:
+        return
 
 def spellCooldownArg(codeArray):
     print("Spell Arg Detected")
     
-    try:
-        alarmTimeOffset = int(codeArray[1])
-    except:
-        print("No Time Argument Set: Defaulting to 25 seconds.")
-        alarmTimeOffset = 25
-
-    def run():
-        global currentTime
-        
-        try:
-            goaltime = currentTime + alarmTimeOffset
-            
-            while (switch == True):
-                time.sleep(1)
-                if goaltime <= currentTime:
-                    playAlarmSound()
-                    break
-                
-                if switch == False:
-                    break
-        except:
-            print("Game Timers not Set, Alarm Not Set")
+    global currentTime
     
+    spellDetected = False
+    ownerDetected = False
+    offsetDetected = False
+    orginalTimeUsedDetected = False
+    
+    
+    spellArgString = codeArray[1].lower()   
+    currentSpellType = None
+    
+    match spellArgString: 
+        case "f" | "fl" | "flash":
+            currentSpellType = Flash
+        case "h" | "hl" | "heal":
+            currentSpellType = Heal
+        case "g" | "gh" | "ghost":
+            currentSpellType = Ghost
+        case "t" | "tp" | "teleport":
+            currentSpellType = Teleport
+        case "c" | "cl" | "cleanse":
+            currentSpellType = Cleanse
+        case "e" | "ex" | "exhaust":
+            currentSpellType = Exhaust
+        case "b" | "br" | "barrier":
+            currentSpellType = Barrier
+        case "i" | "ig" | "ignite":
+            currentSpellType = Ignite
+    
+    
+    currentSpell = Spell(currentSpellType, "", currentTime + currentSpellType.cooldown)
+    
+    #ArgSet 1    
+    try: 
+        argSet = [codeArray(2), codeArray(3)]
+        parseSpellArgs(argSet, currentSpell)
+        
+        try: 
+            argSet = [codeArray(4), codeArray(5)]
+            parseSpellArgs(argSet, currentSpell)
+        except:
+            pass
+        
+    except:
+        print("No further Args found keeping current time as used time")
+    
+    print(currentSpell)
+        
+                    
+    
+
+
+
     
 ########################################################################################
 ###############################   MyNotes.txt Parser  ##################################
@@ -170,7 +243,7 @@ def parseCode(code):
         case "a":
             alarmArg(codeArray)
         case "s":
-            spellCooldownArg()
+            spellCooldownArg(codeArray)
         
 
 
