@@ -18,6 +18,7 @@ root = tk.Tk()
 currentTime = 0
 spellCooldownList = []
 saveToClipboard = False
+allThreads = []
 
 ########################################################################################
 ##############################   Resuable Functionality  ###############################
@@ -84,6 +85,9 @@ def alarmArg(codeArray):
 
     thread = threading.Thread(target=run)
     thread.start()
+    
+    global allThreads
+    allThreads.append(thread)
                        
 
 ########################################################################################
@@ -105,6 +109,9 @@ def gameTimerTracker(offset):
 
     thread = threading.Thread(target=run)
     thread.start()
+    
+    global allThreads
+    allThreads.append(thread)
 
 def gameTimerArg(codeArray):
     print("Game Time Arg Detected")
@@ -290,6 +297,9 @@ def pole():
 
     thread = threading.Thread(target=run)
     thread.start()
+    
+    global allThreads
+    allThreads.append(thread)
 
 
 
@@ -321,6 +331,12 @@ def clipboardOff():
     saveToClipboard = False   
 
 def kill():  
+    global allThreads
+    global switch
+    switch = False 
+    for thread in allThreads:
+        thread.join()
+        
     root.destroy()  
       
 onbutton = tk.Button(root, text = "Pole ON", command = switchon)  
