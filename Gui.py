@@ -1,9 +1,12 @@
+from ast import arg
 from collections import deque
 import os, time
 import PySimpleGUI as sg                       
 import tkinter as tk  
 import threading
 import winsound
+import pyperclip
+
 
 ########################################################################################
 ###########################   Global Values Functionality  #############################
@@ -12,9 +15,9 @@ import winsound
 nf = "C:\Riot Games\League of Legends\MyNotes.txt" #Set Notes File Location
 switch = True
 root = tk.Tk()
-global currentTime
-global spellCooldownList
-
+currentTime = 0
+spellCooldownList = []
+saveToClipboard = False
 
 ########################################################################################
 ##############################   Resuable Functionality  ###############################
@@ -30,10 +33,14 @@ def secondsToMinSeconds(time):
 
 
 def timeStringToSeconds(timeString):
-    timeArray = timeString.split(",")
-    minutes = timeArray[0]
-    seconds = timeArray[1]
-    return (minutes * 60) + seconds
+    if "," in timeString:
+        timeArray = timeString.split(",")
+        minutes = int(timeArray[0])
+        seconds = int(timeArray[1])
+        return (minutes * 60) + seconds
+    else:
+        return int(timeString)
+
     
 
 
@@ -73,8 +80,6 @@ def alarmArg(codeArray):
                     break
         except:
             print("Game Timers not Set, Alarm Not Set")
-            
-            
 
 
     thread = threading.Thread(target=run)
@@ -94,7 +99,6 @@ def gameTimerTracker(offset):
         while (switch == True):
             time.sleep(1)
             currentTime += 1
-            print(currentTime)
             if switch == False:
                 currentTime = 0
                 break
@@ -129,7 +133,7 @@ class Spell:
         
     def __str__(self) -> str:
         if self.owner != "":
-            return self.owner + " " + self.spell + ": " + self.gameTimeExperation
+            return self.owner.title() + " " + self.spell.name + ": " + secondsToMinSeconds(self.gameTimeExperation)
         else:
             return self.spell.name + ": " + secondsToMinSeconds(self.gameTimeExperation)
 
@@ -146,23 +150,43 @@ Ignite = SpellType("Ignite", 180)
 
 ########################################    
   
-
+def addSpellToCooldownList(spell):
+    global spellCooldownList
+    spellCooldownList.append(spell)
+    
+    
+def keepClipboardUpToDate():
+    global spellCooldownList
+    
+    formattedSpells = ""
+    
+    for spell in spellCooldownList:
+        if spell.gameTimeExperation < currentTime:
+            spellCooldownList.remove(spell)
+        else:
+            formattedSpells += str(spell) + " | "
+    
+    formattedSpells = formattedSpells[:-3]
+    
+    if saveToClipboard:
+        pyperclip.copy(formattedSpells)
+    
 
 def parseSpellArgs(argSet, Spell):
     global currentTime
     
     try:
         argument = argSet[0]
-        
         match argument:
             case "o" | "owner":
                 Spell.owner = argSet[1]                   
             case "f" | "offset":
-                Spell.gameTimeExperation = int(argSet[1]) + currentTime
+                Spell.gameTimeExperation = int(argSet[1]) + currentTime + Spell.spell.cooldown
             case "t" | "time":
-                Spell.gameTimeExperation = timeStringToSeconds(argSet[1]) + currentTime
-                
-    except:
+                Spell.gameTimeExperation = timeStringToSeconds(argSet[1]) + currentTime + Spell.spell.cooldown
+
+    except Exception as e: 
+        print(e)
         return
 
 def spellCooldownArg(codeArray):
@@ -202,23 +226,20 @@ def spellCooldownArg(codeArray):
     
     #ArgSet 1    
     try: 
-        argSet = [codeArray(2), codeArray(3)]
+        argSet = [codeArray[2], codeArray[3]]
         parseSpellArgs(argSet, currentSpell)
         
         try: 
-            argSet = [codeArray(4), codeArray(5)]
+            argSet = [codeArray[4], codeArray[5]]
             parseSpellArgs(argSet, currentSpell)
         except:
             pass
-        
+            
     except:
         print("No further Args found keeping current time as used time")
     
     print(currentSpell)
-        
-                    
-    
-
+    addSpellToCooldownList(currentSpell)
 
 
     
@@ -255,11 +276,15 @@ def pole():
         moddate = os.stat(nf)[8]
         while (switch == True):
             newModdate = os.stat(nf)[8]
+            keepClipboardUpToDate()
             if(moddate < newModdate):    
-                lastLine = tail(nf)[-1]
-                parseCode(lastLine)
+                try:
+                    lastLine = tail(nf)[-1]
+                    parseCode(lastLine)
+                except Exception as e: 
+                    print(e)
                 moddate = newModdate
-            time.sleep(0.5)
+            time.sleep(1)
             if switch == False:
                 break
 
@@ -274,7 +299,9 @@ def pole():
 
 def switchon():  
     global switch
+    global saveToClipboard
     switch = True
+    saveToClipboard = True
     print('switch on')
     pole()  
       
@@ -282,7 +309,17 @@ def switchoff():
     print('switch off')
     global switch
     switch = False    
-      
+
+def clipboardOn():  
+    global saveToClipboard
+    saveToClipboard = True
+    print('clipboard on')
+
+def clipboardOff():  
+    print('clipboard off')
+    global saveToClipboard
+    saveToClipboard = False   
+
 def kill():  
     root.destroy()  
       
@@ -290,6 +327,10 @@ onbutton = tk.Button(root, text = "Pole ON", command = switchon)
 onbutton.pack()  
 offbutton =  tk.Button(root, text = "Pole OFF", command = switchoff)  
 offbutton.pack()  
+clipboardOnbutton = tk.Button(root, text = "Clipboard Overwrite ON", command = clipboardOn)  
+clipboardOnbutton.pack()  
+clipboardoffbutton =  tk.Button(root, text = "Clipboard Overwrite OFF", command = clipboardOff)  
+clipboardoffbutton.pack()  
 killbutton = tk.Button(root, text = "EXIT", command = kill)  
 killbutton.pack()  
       
