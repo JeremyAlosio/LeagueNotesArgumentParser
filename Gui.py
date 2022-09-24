@@ -199,13 +199,7 @@ def parseSpellArgs(argSet, Spell):
 def spellCooldownArg(codeArray):
     print("Spell Arg Detected")
     
-    global currentTime
-    
-    spellDetected = False
-    ownerDetected = False
-    offsetDetected = False
-    orginalTimeUsedDetected = False
-    
+    global currentTime   
     
     spellArgString = codeArray[1].lower()   
     currentSpellType = None
@@ -264,11 +258,11 @@ def parseCode(code):
     codeArray = code.split()
     arg = codeArray[0].lower()
     match arg:
-        case "gt":
+        case "gt" | "g" | "t" | "time" | "gametime":
             gameTimerArg(codeArray)
-        case "a":
+        case "a" | "alarm":
             alarmArg(codeArray)
-        case "s":
+        case "s" | "spell":
             spellCooldownArg(codeArray)
         
 
