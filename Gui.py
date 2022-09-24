@@ -28,7 +28,10 @@ def secondsToMinSeconds(time):
     minutes = int(time / 60)
     seconds = time - (minutes * 60)
     
-    formattedTime = str(minutes) + ":" + str(seconds)
+    if(seconds > 10):
+        formattedTime = str(minutes) + ":" + str(seconds)
+    else:
+        formattedTime = str(minutes) + ":0" + str(seconds)
     
     return formattedTime
 
@@ -177,6 +180,8 @@ def keepClipboardUpToDate():
     
     if saveToClipboard:
         pyperclip.copy(formattedSpells)
+    else:
+        print(formattedSpells)
     
 
 def parseSpellArgs(argSet, Spell):
@@ -265,7 +270,6 @@ def parseCode(code):
         case "s" | "spell":
             spellCooldownArg(codeArray)
         
-
 
 
 
